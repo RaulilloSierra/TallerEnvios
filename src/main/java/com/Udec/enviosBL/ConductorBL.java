@@ -1,7 +1,7 @@
 
 package com.Udec.enviosBL;
 
-public class Conductor {
+public class ConductorBL {
     String ID, Nombre, Telefono;
 
     public String getID() {

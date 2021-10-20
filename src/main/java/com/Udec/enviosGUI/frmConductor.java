@@ -1,21 +1,28 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package com.Udec.enviosGUI;
+import com.Udec.enviosBL.ConductorBL;
+import com.Udec.enviosDAL.Conexion;
+import java.sql.ResultSet;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
-/**
- *
- * @author SALA DE INTERNET
- */
 public class frmConductor extends javax.swing.JFrame {
-
+    
     /**
      * Creates new form frmEnvios
      */
+    DefaultTableModel Modelo;
     public frmConductor() {
+        
         initComponents();
+        
+        String[] titulos = {"idConductor","Nombre","Telefono"};
+        
+        Modelo = new DefaultTableModel(null, titulos);
+        TablaConductor.setModel(Modelo);
+        
+        MostrarDatos();
+        Limpiar();
     }
 
     /**
@@ -28,7 +35,7 @@ public class frmConductor extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        TablaConductor = new javax.swing.JTable();
         AgregarBoton = new javax.swing.JButton();
         EditarBoton = new javax.swing.JButton();
         BorrarBoton = new javax.swing.JButton();
@@ -42,7 +49,7 @@ public class frmConductor extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        TablaConductor.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -53,9 +60,19 @@ public class frmConductor extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        TablaConductor.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TablaConductorMouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(TablaConductor);
 
         AgregarBoton.setText("Agregar");
+        AgregarBoton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                AgregarBotonActionPerformed(evt);
+            }
+        });
 
         EditarBoton.setText("Editar");
         EditarBoton.addActionListener(new java.awt.event.ActionListener() {
@@ -168,16 +185,108 @@ public class frmConductor extends javax.swing.JFrame {
 
     private void EditarBotonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_EditarBotonActionPerformed
         // TODO add your handling code here:
+        Conexion obj1 = new Conexion();
+        ConductorBL obj2 = recuperarDatosGUI();
+        String strSentenciaInsert = String.format("UPDATE conductor SET nombre='%s', "
+                + "telefono='%s' WHERE idConductor='%s'", obj2.getNombre(), obj2.getTelefono(), obj2.getID());
+        obj1.ejecutarSentenciasSQL(strSentenciaInsert);
+        this.MostrarDatos();
+        this.Limpiar();
     }//GEN-LAST:event_EditarBotonActionPerformed
 
     private void BorrarBotonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BorrarBotonActionPerformed
         // TODO add your handling code here:
+        Conexion obj1 = new Conexion();
+        ConductorBL obj2 = recuperarDatosGUI();
+        String strSentenciaInsert = String.format("DELETE FROM conductor WHERE idConductor=%s",obj2.getID());
+        obj1.ejecutarSentenciasSQL(strSentenciaInsert);
+        this.MostrarDatos();
+        this.Limpiar();
     }//GEN-LAST:event_BorrarBotonActionPerformed
 
     private void CancelarBotonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CancelarBotonActionPerformed
         // TODO add your handling code here:
+        
+        this.Limpiar();
     }//GEN-LAST:event_CancelarBotonActionPerformed
 
+    private void AgregarBotonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AgregarBotonActionPerformed
+        // TODO add your handling code here:
+        Conexion obj1 = new Conexion();
+        ConductorBL obj2 = recuperarDatosGUI();
+        String strSentenciaInsert = String.format("INSERT INTO conductor(idConductor, nombre, telefono) "
+                + "VALUES ('%s', '%s', '%s')", obj2.getID(), obj2.getNombre(), obj2.getTelefono());
+        obj1.ejecutarSentenciasSQL(strSentenciaInsert);
+        
+        try {
+            ResultSet resultado = obj1.consultarRegistros("SELECT * FROM envios.conductor");
+            while (resultado.next()) {
+                System.out.println(resultado.getString("idConductor"));
+                System.out.println(resultado.getString("Nombre"));
+                System.out.println(resultado.getString("Telefono"));
+                System.out.println("");
+            }
+        } catch (Exception e) {
+            System.out.println("error: "+e);
+        }
+        
+        this.MostrarDatos();
+        this.Limpiar();
+    }//GEN-LAST:event_AgregarBotonActionPerformed
+
+    private void TablaConductorMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TablaConductorMouseClicked
+        // TODO add your handling code here:
+        
+        if (evt.getClickCount()==1){
+            JTable receptor = (JTable) evt.getSource();
+            TextIDConductor.setText(receptor.getModel().getValueAt(receptor.getSelectedRow(), 0).toString());
+            TextNombreConductor.setText(receptor.getModel().getValueAt(receptor.getSelectedRow(), 1).toString());
+            TextTelefono.setText(receptor.getModel().getValueAt(receptor.getSelectedRow(), 2).toString());
+        }
+        
+        AgregarBoton.setEnabled(false);
+        EditarBoton.setEnabled(true);
+        BorrarBoton.setEnabled(true);
+    }//GEN-LAST:event_TablaConductorMouseClicked
+    public ConductorBL recuperarDatosGUI (){
+        ConductorBL objConductor = new ConductorBL();
+        objConductor.setID(TextIDConductor.getText());
+        objConductor.setNombre(TextNombreConductor.getText());
+        objConductor.setTelefono(TextTelefono.getText());
+        return objConductor;
+    }
+    
+    public void Limpiar (){
+        TextIDConductor.setText("");
+        TextNombreConductor.setText("");
+        TextTelefono.setText("");
+        
+        AgregarBoton.setEnabled(true);
+        EditarBoton.setEnabled(false);
+        BorrarBoton.setEnabled(false);
+    }
+    
+    public void MostrarDatos(){
+        
+        while (Modelo.getRowCount()>0){
+            Modelo.removeRow(0);
+        }
+        Conexion obj1 = new Conexion ();
+        try {
+            ResultSet resultado = obj1.consultarRegistros("SELECT * FROM envios.conductor");
+            while (resultado.next()) {
+                System.out.println(resultado.getString("idConductor"));
+                System.out.println(resultado.getString("Nombre"));
+                System.out.println(resultado.getString("Telefono"));
+                System.out.println("");
+                
+                Object []oUsuario = {resultado.getString("idConductor"), resultado.getString("Nombre"),resultado.getString("Telefono")};
+                Modelo.addRow(oUsuario);
+            }
+        } catch (Exception e) {
+            System.out.println("error: "+e);
+        }
+    }
     /**
      * @param args the command line arguments
      */
@@ -219,6 +328,7 @@ public class frmConductor extends javax.swing.JFrame {
     private javax.swing.JButton BorrarBoton;
     private javax.swing.JButton CancelarBoton;
     private javax.swing.JButton EditarBoton;
+    private javax.swing.JTable TablaConductor;
     private javax.swing.JTextField TextIDConductor;
     private javax.swing.JTextField TextNombreConductor;
     private javax.swing.JTextField TextTelefono;
@@ -226,6 +336,5 @@ public class frmConductor extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
     // End of variables declaration//GEN-END:variables
 }
